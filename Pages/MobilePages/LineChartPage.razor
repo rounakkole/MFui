@@ -1,0 +1,207 @@
+﻿@page "/LineChartPage"
+@using BlazorBootstrap
+@using MFui.Data
+@using MFui.Services
+
+@inject INAVResponseService NAVResponseService
+
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false)) 
+
+<PageTitle>Chart</PageTitle>
+
+@if (navResponse == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <!-- <div class="container-fluid overflow-x-auto">
+        <LineChart @ref="lineChart" Height="400" Width="800" />
+    </div> -->
+    <!--<div class="container-fluid">
+        <div class="chart-wrapper" style="width: 100%; max-width: 800px;">
+            <LineChart @ref="lineChart" Height="400" class="w-100" />
+        </div>
+    </div> -->
+    <div>
+        <LineChart @ref="lineChart" Height="400" class="w-100" />
+    </div>
+
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- <div class="mt-5"> -->
+        <div class="column">
+            <button @onclick="async () => await NoFillAsync()" class="btn btn-secondary mb-2">No fill</button>
+            <button @onclick="async () => await FillToZeroAsync()" class="btn btn-secondary mb-2">Fill to specific</button>
+            <button @onclick="async () => await FillToStartAsync()" class="btn btn-secondary mb-2">Fill to start</button>
+            <button @onclick="async () => await FillToEndAsync()" class="btn btn-secondary mb-2">Fill to end</button>
+            <button @onclick="async () => await FillToValueAsync()" class="btn btn-secondary mb-2">Fill to value 50</button>
+        </div>
+    </div>
+
+
+}
+
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? schemeCode { get; set; }
+    //private string schemeCode = string.Empty;
+
+    private NAVResponse? navResponse;
+    private DateOnly startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-2);
+    private DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+
+    private LineChart lineChart = default!;
+    private LineChartOptions lineChartOptions = default!;
+    private ChartData chartData = default!;
+
+    private List<string?> DataListDate = new List<string?>();
+
+    private List<double?> DataListClosing = new List<double?>();
+    private List<double?> DataListSMA = new List<double?>();
+
+    private string inSymbolDescription = "Chart";
+
+    private async Task PrepareLineData()
+    {
+        int forEach = 1;
+        int SMAperiod = 5; 
+        double? closePrice, sumPrice = 0;
+
+        navResponse = await NAVResponseService.GetNAVResponse(schemeCode, startDate, endDate);
+        inSymbolDescription = navResponse.Meta.SchemeName;
+
+        List<double?> PreValues = new List<double?>() { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+
+        navResponse.Data.Reverse();
+        foreach (NAVData NAVDataItem in navResponse.Data)
+        {
+            closePrice = double.Parse(NAVDataItem.NAV);
+            sumPrice = 0;
+
+            //1=Jun, 2=May, 3=Apr
+            PreValues[0] = closePrice;
+            foreach (int i in Enumerable.Range(0, SMAperiod))
+            {
+                PreValues[SMAperiod - i] = PreValues[SMAperiod - i - 1];
+                sumPrice = sumPrice + PreValues[(SMAperiod - i)];
+            }
+
+            if (SMAperiod < forEach)
+            {
+                DataListDate.Add(NAVDataItem.Date);
+
+                DataListClosing.Add(closePrice);
+                DataListSMA.Add(sumPrice / SMAperiod);
+            }
+
+            forEach++;
+        }
+
+        InsertLineData();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void InsertLineData()
+    {
+        //Task.Delay(2000); //ToDo: remove
+        string[]? colors = ColorUtility.CategoricalTwelveColors;
+
+        List<string> labels = new List<string> { };
+        labels = DataListDate;
+        List<IChartDataset> datasets = new List<IChartDataset>();
+        LineChartDataset dataset1 = new LineChartDataset
+            {
+                Label = "Close",
+                Data = DataListClosing,
+                BackgroundColor = colors[1],
+                BorderColor = colors[1],
+                BorderWidth = 2,
+                HoverBorderWidth = 4,
+                // PointBackgroundColor = colors[1],
+                // PointRadius = 0, // hide points
+                // PointHoverRadius = 4,
+            };
+        datasets.Add(dataset1);
+
+        LineChartDataset dataset2 = new LineChartDataset
+            {
+                Label = "SMA",
+                Data = DataListSMA,
+                BackgroundColor = colors[4],
+                BorderColor = colors[4],
+                BorderWidth = 2,
+                HoverBorderWidth = 4,
+                // PointBackgroundColor = colors[4],
+                // PointRadius = 0, // hide points
+                // PointHoverRadius = 4,
+            };
+        datasets.Add(dataset2);
+
+
+        chartData = new ChartData { Labels = labels, Datasets = datasets };
+
+        lineChartOptions = new();
+        lineChartOptions.Responsive = true;
+        lineChartOptions.Interaction = new Interaction { Mode = InteractionMode.Index };
+
+        lineChartOptions.Scales.Y!.Title = new ChartAxesTitle { Text = "NAV", Display = true };
+        lineChartOptions.Scales.X!.Title = new ChartAxesTitle { Text = "Date", Display = true };
+        lineChartOptions.Plugins.Title!.Text = inSymbolDescription;
+        lineChartOptions.Plugins.Title.Display = true;
+        lineChartOptions.Scales.Y!.BeginAtZero = false;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) 
+        {
+            await PrepareLineData();
+            await lineChart.InitializeAsync(chartData, lineChartOptions);
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+
+
+
+    
+	private async Task NoFillAsync()
+	{
+		var middle = chartData.Datasets![1] as LineChartDataset;
+		middle!.Fill = ""; // null;
+		await lineChart.UpdateAsync(chartData, lineChartOptions);
+	}
+
+	private async Task FillToZeroAsync()
+	{
+		var middle = chartData.Datasets![1] as LineChartDataset;
+		middle!.FillToDataset(0, false);
+		await lineChart.UpdateAsync(chartData, lineChartOptions);
+	}
+
+	private async Task FillToStartAsync()
+	{
+		var middle = chartData.Datasets![1] as LineChartDataset;
+		middle!.FillToStart();
+		await lineChart.UpdateAsync(chartData, lineChartOptions);
+	}
+
+	private async Task FillToEndAsync()
+	{
+		var middle = chartData.Datasets![1] as LineChartDataset;
+		middle!.FillToEnd();
+		await lineChart.UpdateAsync(chartData, lineChartOptions);
+	}
+
+    private async Task FillToValueAsync()
+    {
+        var middle = chartData.Datasets![1] as LineChartDataset;
+        middle!.FillToValue(50.0);
+        await lineChart.UpdateAsync(chartData, lineChartOptions);
+    }
+
+}

@@ -1,0 +1,81 @@
+﻿@page "/"
+@using MFui.Data
+@using MFui.Services
+@using BlazorBootstrap
+
+@inject NavigationManager NavigationManager
+@inject ISchemeListItemService SchemeListItemService
+@inject ISearchListItemService SearchListItemService
+@inject ISchemeLatestNAVService SchemeLatestNAVService
+
+<PageTitle>Home</PageTitle>
+<h3>Home</h3>
+
+<div style="display: flex; gap: 10px; align-items: flex-start;">
+    <input @bind="searchQuery" class="form-control" placeholder="Search" />
+    <button @onclick="getSearchQuery" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    <button @onclick="getSchemeListItem" class="btn btn-primary"><i class="bi bi-arrow-right"></i></button>
+</div>
+
+<br />
+
+<div>
+    @if (schemeListItemList == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <!--
+            <thead>
+                <tr>
+                    <th>SchemeCode</th>
+                    <th>SchemeName</th>
+                </tr>
+            </thead>
+             -->
+            <tbody>
+                @foreach (SchemeListItem schemeListItem in schemeListItemList)
+                {
+                    <tr>
+                        <!-- <td>@schemeListItem.SchemeCode</td> -->
+                        <td>@schemeListItem.SchemeName</td>
+                        <td><a href="@($"NAVResponsePage?schemeCode={schemeListItem.SchemeCode}")" class="btn btn-secondary"><i class="bi bi-graph-up"></i></a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    }
+</div>
+
+
+
+@code {
+    private List<SchemeListItem>? schemeListItemList;
+    private string searchQuery = string.Empty;
+
+    private int limit = 100;
+    private int offset = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        schemeListItemList = await SchemeListItemService.GetSchemeListItem(limit, offset);
+    }
+
+    private async Task getSchemeListItem()
+    {
+        offset += limit;
+        schemeListItemList = await SchemeListItemService.GetSchemeListItem(limit, offset);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task getSearchQuery()
+    {
+        schemeListItemList = await SearchListItemService.GetSearchQuery_new(searchQuery);
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

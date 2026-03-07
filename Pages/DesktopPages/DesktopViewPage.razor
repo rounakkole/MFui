@@ -1,0 +1,114 @@
+﻿@page "/DesktopViewPage"
+@using MFui.Data
+@using MFui.Services
+@using BlazorBootstrap
+
+@inject NavigationManager NavigationManager 
+@inject ISchemeListItemService SchemeListItemService
+@inject ISearchListItemService SearchListItemService
+@inject ISchemeLatestNAVService SchemeLatestNAVService
+
+<PageTitle>Home</PageTitle>
+<h3><i class="bi bi-display-fill"></i> Home</h3>
+
+<div style="display: flex; gap: 10px; align-items: flex-start;">
+    <input @bind="searchQuery" class="form-control" placeholder="Search" />
+    <button @onclick="getSearchQuery" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    <input @bind="limit" class="form-control" placeholder="Limit" />
+    <button @onclick="getSchemeListItem" class="btn btn-primary"><i class="bi bi-arrow-right"></i></button>
+</div>
+
+<br />
+
+<div>
+    @if (schemeListItemList == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <Grid @ref="gridRef"
+              TItem="SchemeListItem"
+              AllowFiltering="true"
+              AllowPaging="true"
+              AllowSorting="true"
+              AllowSelection="true"
+              Class="table table-hover table-bordered table-striped"
+              DataProvider="SchemeDataProvider"
+              PageSize="25"
+              Responsive="true"
+              RowKeySelector="(schemeListItem) => schemeListItem.SchemeCode"
+              SelectedItemsChanged="OnSelectedItemsChanged"
+              SelectionMode="GridSelectionMode.Single">
+
+            <GridColumns>
+                <GridColumn TItem="SchemeListItem" HeaderText="Code" PropertyName="SchemeCode" SortKeySelector="item => item.SchemeCode">
+                    @context.SchemeCode
+                </GridColumn>
+                <GridColumn TItem="SchemeListItem" HeaderText="Name" PropertyName="SchemeName" FilterTextboxWidth="50" FilterTextboxWidthUnit="Unit.Percentage" SortKeySelector="item => item.SchemeName">
+                    @context.SchemeName
+                </GridColumn>
+                <GridColumn TItem="SchemeListItem" HeaderText="Div Reinvestment" PropertyName="IsinDivReinvestment" SortKeySelector="item => item.IsinDivReinvestment">
+                    @context.IsinDivReinvestment
+                </GridColumn>
+                <GridColumn TItem="SchemeListItem" HeaderText="Growth" PropertyName="IsinGrowth" SortKeySelector="item => item.IsinGrowth">
+                    @context.IsinGrowth
+                </GridColumn>
+            </GridColumns>
+
+        </Grid>
+    }
+</div>
+
+
+@code {
+    private List<SchemeListItem>? schemeListItemList;
+    private Grid<SchemeListItem> gridRef;
+    private HashSet<SchemeListItem> selectedScheme = new();
+    private string searchQuery = string.Empty;
+
+    private int limit = 100;
+    private int offset = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        schemeListItemList = await SchemeListItemService.GetSchemeListItem(limit, offset);
+    }
+
+    private async Task getSchemeListItem()
+    {
+        offset += limit;
+        schemeListItemList = await SchemeListItemService.GetSchemeListItem(limit, offset);
+
+        await gridRef.RefreshDataAsync();
+        //await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task<GridDataProviderResult<SchemeListItem>> SchemeDataProvider(GridDataProviderRequest<SchemeListItem> request)
+    {
+        return await Task.FromResult(request.ApplyTo(schemeListItemList));
+    }
+
+    private Task OnSelectedItemsChanged(HashSet<SchemeListItem> schemeListItem)
+    {
+        //selectedScheme = schemeListItem is not null && schemeListItem.Any() ? schemeListItem : new();
+        if (schemeListItem is not null && schemeListItem.Any())
+        {
+            selectedScheme = schemeListItem;
+            NavigationManager.NavigateTo($"NAVResponsePage?schemeCode={selectedScheme.First().SchemeCode}");
+        }
+        else
+        {
+            selectedScheme = new();
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private async Task getSearchQuery()
+    {
+        schemeListItemList = await SearchListItemService.GetSearchQuery_new(searchQuery);
+        await gridRef.RefreshDataAsync();
+    }
+
+}

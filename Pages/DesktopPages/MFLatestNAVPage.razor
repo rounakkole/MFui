@@ -1,0 +1,50 @@
+﻿@page "/MFLatestNAVPage"
+@using MFui.Data
+@using MFui.Services
+
+@inject IMFLatestNAVService MFLatestNAVService
+
+<PageTitle>Latest NAV</PageTitle>
+<h3>Latest NAV</h3>
+
+@if (schemeLatestNAVList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>NAV</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (SchemeLatestNAV schemeLatestNAVItem in schemeLatestNAVList)
+            {
+                <tr>
+                    <td>@schemeLatestNAVItem.SchemeCode</td>
+                    <td>@schemeLatestNAVItem.SchemeName</td>
+                    <td>@schemeLatestNAVItem.Date</td>
+                    <td>@schemeLatestNAVItem.NAV</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    private List<SchemeLatestNAV>? schemeLatestNAVList;
+    private int limit = 100;
+    private int offset = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        schemeLatestNAVList = await MFLatestNAVService.GetSchemeLatestNAV(limit, offset);
+    }
+
+}

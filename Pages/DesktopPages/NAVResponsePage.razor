@@ -1,0 +1,100 @@
+﻿@page "/NAVResponsePage"
+@using MFui.Data
+@using MFui.Pages
+@using MFui.Services
+@using BlazorBootstrap
+
+@inject INAVResponseService NAVResponseService
+
+<PageTitle>NAV Response</PageTitle>
+<h3>NAV</h3>
+
+<div class="row g-2">
+    <!-- <input TValue="DateOnly" @bind="startDate" class="form-control" placeholder="Start Date" /> -->
+    <!-- <input TValue="DateOnly" @bind="endDate" class="form-control" placeholder="End Date" /> -->
+    <div class="col-6 col-md-3">
+        <DateInput TValue="DateOnly" @bind-Value="@startDate" Placeholder="Start Date" />
+    </div>
+    <div class="col-6 col-md-3">
+        <DateInput TValue="DateOnly" @bind-Value="@endDate" Placeholder="End Date" />
+    </div>
+    <div class="col-6 col-md-4">
+        <input @bind="schemeCode" class="form-control" placeholder="Scheme Code" />
+    </div>
+    <div class="col-6 col-md-2">
+        <button @onclick="getNAVResponse" class="btn btn-primary"><i class="bi bi-search"></i></button>
+    </div>
+</div>
+
+<br />
+
+<div>
+    @if (navResponse == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <Accordion>
+            <AccordionItem Title="Scheme">
+                <Content>
+                    <p>
+                    @navResponse.Meta.SchemeCode
+                    @navResponse.Meta.SchemeName
+                    </p>
+                    <p>@navResponse.Meta.SchemeType</p>
+                    <p>@navResponse.Meta.SchemeCategory</p>
+                </Content>
+            </AccordionItem>
+            <AccordionItem Title="Chart" Active="true">
+                <Content>
+
+                    <LineChartWidget navResponse="@navResponse" @key="navResponse" />
+
+                </Content>
+            </AccordionItem>
+        </Accordion>
+
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>NAV</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (NAVData NAVDataItem in navResponse.Data)
+                {
+                    <tr>
+                        <td>@NAVDataItem.Date</td>
+                        <td>@NAVDataItem.NAV</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+
+@code {
+    [SupplyParameterFromQuery]
+    private string schemeCode { get; set; }
+    //private string schemeCode = string.Empty;
+
+    private NAVResponse? navResponse;
+    private DateOnly startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-2);
+    private DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await getNAVResponse();
+    }
+
+    private async Task getNAVResponse()
+    {
+        navResponse = await NAVResponseService.GetNAVResponse(schemeCode, startDate, endDate);
+    }
+
+}
