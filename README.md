@@ -1,4 +1,5 @@
 # MFui
+https://kind-pebble-08da44700.6.azurestaticapps.net
 
 ### Credits & Thanks
 ```
@@ -38,6 +39,7 @@ Special thanks to the open source community!
 [3] New repository secret: AZURE_STATIC_WEB_APPS_API_TOKEN = Paste
 ```
 
+![Screenshot 1](Images/Screenshot_191534.jpg)
 
 
 
