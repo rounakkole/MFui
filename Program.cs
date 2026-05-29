@@ -16,6 +16,8 @@ builder.Services.AddScoped<ISchemeLatestNAVService, SchemeLatestNAVService>();
 builder.Services.AddScoped<IMFLatestNAVService, MFLatestNAVService>();
 builder.Services.AddScoped<ISearchListItemService, SearchListItemService>();
 
+builder.Services.AddScoped<NavStateService>();
+
 builder.Services.AddBlazorBootstrap();
 
 

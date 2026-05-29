@@ -7,12 +7,13 @@
 @inject ISchemeListItemService SchemeListItemService
 @inject ISearchListItemService SearchListItemService
 @inject ISchemeLatestNAVService SchemeLatestNAVService
+@inject NavStateService NavState
 
 <PageTitle>MFui</PageTitle>
 <!-- <h3>Home</h3> -->
 
 <div style="display: flex; gap: 10px; align-items: flex-start;">
-    <input @bind="searchQuery" class="form-control" placeholder="Search" />
+    <input @bind="NavState.SearchQuery" class="form-control" placeholder="Search" />
     <button @onclick="getSearchQuery" class="btn btn-primary"><i class="bi bi-search"></i></button>
     <button @onclick="getSchemeListItem" class="btn btn-primary"><i class="bi bi-arrow-right"></i></button>
 </div>
@@ -54,27 +55,35 @@
 
 @code {
     private List<SchemeListItem>? schemeListItemList;
-    private string searchQuery = string.Empty;
-
-    private int limit = 100;
-    private int offset = 0;
 
     protected override async Task OnInitializedAsync()
     {
-        schemeListItemList = await SchemeListItemService.GetSchemeListItem(limit, offset);
+        if (NavState.CachedSchemeListItem == null)
+        {
+            NavState.CachedSchemeListItem = await SchemeListItemService.GetSchemeListItem(NavState.Limit, NavState.Offset);
+        }
+
+        schemeListItemList = NavState.CachedSchemeListItem;
     }
 
     private async Task getSchemeListItem()
     {
-        offset += limit;
-        schemeListItemList = await SchemeListItemService.GetSchemeListItem(limit, offset);
+        NavState.SearchQuery = string.Empty;
+        NavState.Offset += NavState.Limit;
+        NavState.CachedSchemeListItem = await SchemeListItemService.GetSchemeListItem(NavState.Limit, NavState.Offset);
+        schemeListItemList = NavState.CachedSchemeListItem;
 
         await InvokeAsync(StateHasChanged);
     }
 
     private async Task getSearchQuery()
     {
-        schemeListItemList = await SearchListItemService.GetSearchQuery_new(searchQuery);
+        if (string.IsNullOrEmpty(NavState.SearchQuery))
+        {
+            return;
+        }
+        NavState.CachedSchemeListItem = await SearchListItemService.GetSearchQuery_new(NavState.SearchQuery);
+        schemeListItemList = NavState.CachedSchemeListItem;
         await InvokeAsync(StateHasChanged);
     }
 
