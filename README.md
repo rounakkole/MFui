@@ -4,9 +4,9 @@ https://kind-pebble-08da44700.6.azurestaticapps.net
 ### Credits & Thanks
 ```
 dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor
+www.mfapi.in/
 www.github.com/twbs/bootstrap
 www.github.com/vikramlearning/blazorbootstrap
-www.mfapi.in/
 Special thanks to the open source community!
 ```
 
@@ -16,6 +16,7 @@ Special thanks to the open source community!
 "Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.0" PrivateAssets="all" 
 "Blazor.Bootstrap" Version="3.5.0" 
 "Newtonsoft.Json" Version="13.0.4" 
+"TG.Blazor.IndexedDB" Version="1.5.0-preview
 ```
 
 ### Azure deployment

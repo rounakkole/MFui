@@ -1,0 +1,141 @@
+﻿@page "/"
+@using MFui.Data
+@using MFui.Data.Enums
+@using MFui.Pages
+@using MFui.Services
+@using BlazorBootstrap
+@using TG.Blazor.IndexedDB
+
+@inject IBacktestService BacktestService
+@inject INAVResponseService NAVResponseService
+
+@inject ToastService ToastService
+@inject IndexedDBManager DbManager
+
+<PageTitle>MFui</PageTitle>
+<!-- <h3>MFui</h3> -->
+
+<div>
+    @if (investmentsList == null || !investmentsList.Any())
+    {
+        <div class="text-center p-5 text-muted bg-light rounded-3 shadow-sm">
+            <i class="bi bi-wallet2 display-4 mb-3 d-block text-secondary"></i>
+            <h5 class="text-secondary">No Active SIPs Found</h5>
+            
+            <a href="MobileViewPage" class="btn btn-secondary">Explore</a>
+        </div>
+    }
+    else
+    {
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0"> <!-- table-hover -->
+                        <thead class="table-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4 fw-semibold border-bottom-0">Fund Name</th>
+                                <th class="fw-semibold border-bottom-0">Frequency</th>
+                                <th class="fw-semibold border-bottom-0">SIP Amount</th>
+                                <th class="fw-semibold border-bottom-0">Start Date</th>
+                                <!-- <th class="pe-4 text-end fw-semibold border-bottom-0">Actions</th> -->
+                            </tr>
+                        </thead>
+                        <tbody class="border-top-0">
+                            @foreach (var investment in investmentsList)
+                            {
+                                <tr>
+                                    <td class="ps-4 fw-medium">
+                                        <div class="d-flex align-items-center">
+                                            @investment.SchemeName
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-light text-secondary border">@investment.Frequency</span>
+                                    </td>
+
+                                    <td class="fw-semibold">
+                                        ₹@investment.SIPamount.ToString("N0")
+                                    </td>
+
+                                    <td class="small">
+                                        @investment.StartDate.ToString("dd MMM yyyy")
+                                    </td>
+
+                                    <td class="pe-4 text-end">
+                                            <button type="button" class="btn btn-sm btn-primary"
+                                                    title="Create orders"
+                                                    @onclick="() => runInvestments(investment.SchemeCode)">
+                                                <i class="bi bi-calculator"></i>
+                                            </button>
+                                            <a class="btn btn-sm btn-secondary"
+                                                    title="Navigate"
+                                                    href="@($"NAVResponsePage?schemeCode={investment.SchemeCode}")">
+                                                <i class="bi bi-graph-up"></i>
+                                            </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <br />
+
+        <div class="row g-2">
+            <div class="col-6 col-md-2">
+                <button @onclick="runAllInvestments" class="btn btn-secondary btn-lg"><i class="bi bi-calculator"></i></button>
+            </div>
+        </div>
+    }
+    <br />
+    <br />
+</div>
+
+
+@code {
+    private List<InvestmentTable>? investmentsList = new();
+
+    private string schemeCode = string.Empty;
+    private DateOnly startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-2);
+    private DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        List<InvestmentTable>? localRecords = await DbManager.GetRecords<InvestmentTable>("InvestmentTable");
+        if (localRecords != null && localRecords.Count > 0)
+        {
+            investmentsList = localRecords;
+        }
+
+    }
+
+
+    private async Task runInvestments(int _schemeCode)
+    {
+        BacktestService.NAVResponseCTOR(NAVResponseService);
+        await BacktestService.RunInvestments(_schemeCode);
+        
+        ToastService.Notify(new ToastMessage(
+                ToastType.Success,
+                "Calculation triggered",
+                $"{_schemeCode} has been successfully calculated."
+            ));
+    }
+
+    private async Task runAllInvestments()
+    {
+
+        BacktestService.NAVResponseCTOR(NAVResponseService);
+        await BacktestService.RunAllInvestments();
+        
+        ToastService.Notify(new ToastMessage(
+                ToastType.Success,
+                "Calculation triggered",
+                $"All SIPs has been successfully calculated."
+            ));
+    }
+
+}

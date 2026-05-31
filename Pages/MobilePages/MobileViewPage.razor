@@ -1,16 +1,16 @@
-﻿@page "/"
+﻿@page "/MobileViewPage"
 @using MFui.Data
 @using MFui.Services
 @using BlazorBootstrap
 
-@inject NavigationManager NavigationManager
+@inject NavStateService NavState
+
 @inject ISchemeListItemService SchemeListItemService
 @inject ISearchListItemService SearchListItemService
 @inject ISchemeLatestNAVService SchemeLatestNAVService
-@inject NavStateService NavState
 
-<PageTitle>MFui</PageTitle>
-<!-- <h3>Home</h3> -->
+<PageTitle>Mobile</PageTitle>
+<!-- <h3> <i class="bi bi-phone-fill"></i> Home</h3> -->
 
 <div style="display: flex; gap: 10px; align-items: flex-start;">
     <input @bind="NavState.SearchQuery" class="form-control" placeholder="Search" />
@@ -41,7 +41,9 @@
                 {
                     <tr>
                         <!-- <td>@schemeListItem.SchemeCode</td> -->
-                        <td>@schemeListItem.SchemeName</td>
+                            <td style="font-weight:@GetFontWeight(schemeListItem.IsinDivReinvestment, schemeListItem.IsinGrowth);">
+                            @schemeListItem.SchemeName
+                        </td>
                         <td><a href="@($"NAVResponsePage?schemeCode={schemeListItem.SchemeCode}")" class="btn btn-secondary"><i class="bi bi-graph-up"></i></a></td>
                     </tr>
                 }
@@ -86,5 +88,15 @@
         schemeListItemList = NavState.CachedSchemeListItem;
         await InvokeAsync(StateHasChanged);
     }
+
+    private string GetFontWeight(string IsinDivReinvestment, string IsinGrowth)
+    {
+        if (string.IsNullOrEmpty(IsinDivReinvestment) || string.IsNullOrEmpty(IsinGrowth))
+        {
+            return "normal";
+        }
+        return "bold";
+    }
+
 
 }

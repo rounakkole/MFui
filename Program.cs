@@ -15,10 +15,12 @@ builder.Services.AddScoped<INAVResponseService, NAVResponseService>();
 builder.Services.AddScoped<ISchemeLatestNAVService, SchemeLatestNAVService>();
 builder.Services.AddScoped<IMFLatestNAVService, MFLatestNAVService>();
 builder.Services.AddScoped<ISearchListItemService, SearchListItemService>();
+builder.Services.AddScoped<IBacktestService, BacktestService>();
 
 builder.Services.AddScoped<NavStateService>();
 
 builder.Services.AddBlazorBootstrap();
+builder.Services.AddIndexedDBServices();
 
 
 await builder.Build().RunAsync();
