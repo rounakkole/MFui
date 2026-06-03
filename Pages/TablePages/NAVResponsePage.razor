@@ -6,10 +6,12 @@
 @using BlazorBootstrap
 @using TG.Blazor.IndexedDB
 
+@inject ITransactionService TransactionService
 @inject INAVResponseService NAVResponseService
 
 @inject ToastService ToastService
 @inject IndexedDBManager DbManager
+@inject NavigationManager NavigationManager
 
 <PageTitle>Investments</PageTitle>
 <h3>Investments</h3>
@@ -27,7 +29,12 @@
         <input @bind="schemeCode" class="form-control" placeholder="Scheme Code" />
     </div>
     <div class="col-6 col-md-2">
-        <button @onclick="getNAVResponse" class="btn btn-primary"><i class="bi bi-search"></i></button>
+        <button @onclick="getNAVResponse" class="btn btn-primary me-1"><i class="bi bi-search"></i></button>
+        @if (investmentRecord != null)
+        {
+            <button @onclick="calculateTransactions" class="btn btn-secondary"><i class="bi bi-calculator"></i></button>
+            <button @onclick="clearInvestments" class="btn btn-danger"><i class="bi bi-trash"></i></button>
+        }
     </div>
 </div>
 
@@ -103,15 +110,15 @@
                         <div class="col-md-6">
                             <div class="mb-2 px-2">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label text-muted small mb-0">Step Up</label>
-                                    <span class="badge bg-primary rounded-pill">@newInvestmentRecord.StepUp %</span>
+                                    <label class="form-label text-muted small mb-0">Step Up: @newInvestmentRecord.StepUp %</label>
+                                    <!-- <span class="badge bg-primary rounded-pill">@newInvestmentRecord.StepUp %</span> -->
                                 </div>
                                 <input type="range" class="form-range" @bind="newInvestmentRecord.StepUp" @bind:event="oninput" min="0" max="100" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-4 text-end">
+                    <div class="text-end">
                         <button type="submit" class="btn btn-primary px-4 shadow-sm"> Save </button>
                     </div>
 
@@ -124,10 +131,28 @@
         @if (schemeOrderTable != null && schemeOrderTable.Any())
         {
             <div class="card border-0 shadow-sm rounded-3 mt-4">
-                <div class="card-header bg-white border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
-                    <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill">
+                <div class="card-header bg-white border-bottom-0 pt-1 pb-2 px-4 d-flex justify-content-between align-items-center">
+                    <span class="text-dark"> <!-- class="badge bg-primary bg-opacity-10 text-primary rounded-pill" -->
                         @schemeOrderTable.Count() Transactions
                     </span>
+
+                    @if (newInvestmentRecord.TotalsTable != null)
+                    {
+                        <div class="d-flex align-items-center gap-2 text-dark">
+                            <div>
+                                <p class="mb-0 lh-1" style="font-size: 0.75rem;">Invested</p>
+                                ₹@newInvestmentRecord.TotalsTable.InvestedAmount.ToString("N0")
+                            </div>
+                            <div class="text-center">
+                                <p class="mb-0 lh-1" style="font-size: 0.75rem;">Returns</p>
+                                @newInvestmentRecord.TotalsTable.Returns.ToString("F2")%
+                            </div>
+                            <div class="text-end">
+                                <p class="mb-0 lh-1" style="font-size: 0.75rem;">Current</p>
+                                ₹@newInvestmentRecord.TotalsTable.TotalValue.ToString("N0")
+                            </div>
+                        </div>
+                    }
                 </div>
 
                 <div class="card-body p-0">
@@ -152,7 +177,7 @@
                                             ₹@order.SIPamount.ToString("N0")
                                         </td>
 
-                                        <td class="pe-4 text-end font-monospace small">
+                                        <td class="pe-4 text-end small">
                                             @order.NAV.ToString("N4")
                                         </td>
                                     </tr>
@@ -163,9 +188,6 @@
                 </div>
             </div>
         }
-
-
-
     }
     <br />
     <br />
@@ -196,12 +218,14 @@
         {
             newInvestmentRecord.SchemeCode = navResponse.Meta.SchemeCode;
             newInvestmentRecord.SchemeName = navResponse.Meta.SchemeName;
+            newInvestmentRecord.StartDate = startDate;
         }
 
         List<OrderTable> orderTables = await DbManager.GetRecords<OrderTable>("OrderTable");
         if (orderTables != null)
         {
             schemeOrderTable = orderTables.Where(x => x.SchemeCode == navResponse.Meta.SchemeCode).ToList();
+            schemeOrderTable = schemeOrderTable?.OrderByDescending(x => x.Id).ToList();
         }
     }
 
@@ -231,16 +255,50 @@
 
             ToastService.Notify(new ToastMessage(
                     ToastType.Success,
-                    "SIP Saved",
+                    "SIP saved",
                     $"{newInvestmentRecord.SchemeName} has been successfully saved."
                 ));
+
+            await calculateTransactions();
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error: {ex.Message}");
-        }
-        
 
+            ToastService.Notify(new ToastMessage(
+               ToastType.Danger,
+               "SIP not saved",
+               $"Error occured. Please check Console in Developer Tools."
+           ));
+        }
+    }
+
+
+    private async Task calculateTransactions()
+    {
+        TransactionService.NAVResponseCTOR(NAVResponseService);
+        await TransactionService.CalculateTransactions(navResponse.Meta.SchemeCode);
+
+        ToastService.Notify(new ToastMessage(
+                ToastType.Success,
+                "Calculation triggered",
+                $"{navResponse.Meta.SchemeCode} has been successfully calculated."
+            ));
+
+        await OnInitializedAsync();
+    }
+
+    private async Task clearInvestments()
+    {
+        await TransactionService.ClearInvestments(navResponse.Meta.SchemeCode);
+
+        ToastService.Notify(new ToastMessage(
+                ToastType.Danger,
+                "Removing SIP",
+                $"{navResponse.Meta.SchemeCode} has been successfully removed."
+            ));
+
+        NavigationManager.NavigateTo("/");
     }
 
 

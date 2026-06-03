@@ -85,13 +85,19 @@
             return;
         }
         NavState.CachedSchemeListItem = await SearchListItemService.GetSearchQuery_new(NavState.SearchQuery);
+        /*
+        NavState.CachedSchemeListItem = NavState.CachedSchemeListItem
+                                          .Where(x => !string.IsNullOrEmpty(x.IsinDivReinvestment)
+                                          || !string.IsNullOrEmpty(x.IsinGrowth))
+                                          .ToList();
+        */
         schemeListItemList = NavState.CachedSchemeListItem;
         await InvokeAsync(StateHasChanged);
     }
 
     private string GetFontWeight(string IsinDivReinvestment, string IsinGrowth)
     {
-        if (string.IsNullOrEmpty(IsinDivReinvestment) || string.IsNullOrEmpty(IsinGrowth))
+        if (string.IsNullOrEmpty(IsinDivReinvestment) && string.IsNullOrEmpty(IsinGrowth))
         {
             return "normal";
         }

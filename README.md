@@ -40,8 +40,8 @@ Special thanks to the open source community!
 [3] New repository secret: AZURE_STATIC_WEB_APPS_API_TOKEN = Paste
 ```
 
-![Screenshot 1](Images/Screenshot_191534.jpg)
-
+![Screenshot 1](Images/Screenshot_233624.jpg)
+![Screenshot 2](Images/Screenshot_233544.jpg)
 
 
 

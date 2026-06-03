@@ -15,7 +15,7 @@ builder.Services.AddScoped<INAVResponseService, NAVResponseService>();
 builder.Services.AddScoped<ISchemeLatestNAVService, SchemeLatestNAVService>();
 builder.Services.AddScoped<IMFLatestNAVService, MFLatestNAVService>();
 builder.Services.AddScoped<ISearchListItemService, SearchListItemService>();
-builder.Services.AddScoped<IBacktestService, BacktestService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 builder.Services.AddScoped<NavStateService>();
 

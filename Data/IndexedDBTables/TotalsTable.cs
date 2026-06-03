@@ -2,7 +2,7 @@
 {
     public class TotalsTable
     {
-        public byte Id { get; set; } = 1; // Key
+        public byte Id { get; set; } = 1; // Key 
 
         public uint InvestedAmount { get; set; } = 0;
         public float Returns { get; set; } = 0;

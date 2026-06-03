@@ -6,7 +6,7 @@
 @using BlazorBootstrap
 @using TG.Blazor.IndexedDB
 
-@inject IBacktestService BacktestService
+@inject ITransactionService TransactionService
 @inject INAVResponseService NAVResponseService
 
 @inject ToastService ToastService
@@ -27,67 +27,69 @@
     }
     else
     {
-        <div class="card border-0 shadow-sm rounded-3">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table align-middle mb-0"> <!-- table-hover -->
-                        <thead class="table-light text-muted small text-uppercase">
-                            <tr>
-                                <th class="ps-4 fw-semibold border-bottom-0">Fund Name</th>
-                                <th class="fw-semibold border-bottom-0">Frequency</th>
-                                <th class="fw-semibold border-bottom-0">SIP Amount</th>
-                                <th class="fw-semibold border-bottom-0">Start Date</th>
-                                <!-- <th class="pe-4 text-end fw-semibold border-bottom-0">Actions</th> -->
-                            </tr>
-                        </thead>
-                        <tbody class="border-top-0">
-                            @foreach (var investment in investmentsList)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-medium">
-                                        <div class="d-flex align-items-center">
-                                            @investment.SchemeName
-                                        </div>
-                                    </td>
+       
+        <div class="row g-4">
+            @foreach (var investment in investmentsList)
+            {
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 border-0 shadow-sm rounded-4">
+                        <div class="card-body p-4 d-flex flex-column">
 
-                                    <td>
-                                        <span class="badge bg-light text-secondary border">@investment.Frequency</span>
-                                    </td>
+                            <div class="mb-2">
+                                <a href="@($"NAVResponsePage?schemeCode={investment.SchemeCode}")" class="text-decoration-none stretched-link">
+                                    <h10 class="card-title fw-bold mb-1" title="@investment.SchemeName">
+                                        @investment.SchemeName
+                                    </h10>
+                                </a>
+                            </div>
 
-                                    <td class="fw-semibold">
-                                        ₹@investment.SIPamount.ToString("N0")
-                                    </td>
-
-                                    <td class="small">
+                            <div class="d-flex justify-content-between align-items-end mt-auto">
+                                <div>
+                                    <p class="text-muted small mb-1">Start Date</p>
+                                    <span class="fw-medium small">
+                                        <i class="bi bi-calendar3 me-1 text-muted"></i>
                                         @investment.StartDate.ToString("dd MMM yyyy")
-                                    </td>
+                                    </span>
+                                </div>
+                                <div class="d-flex flex-column align-items-end">
+                                    <span class="badge bg-light text-secondary border">@investment.Frequency</span>
+                                    <span class="fw-bold fs-5">
+                                        ₹@investment.SIPamount.ToString("N0")
+                                    </span>
+                                </div>
+                            </div>
 
-                                    <td class="pe-4 text-end">
-                                            <button type="button" class="btn btn-sm btn-primary"
-                                                    title="Create orders"
-                                                    @onclick="() => runInvestments(investment.SchemeCode)">
-                                                <i class="bi bi-calculator"></i>
-                                            </button>
-                                            <a class="btn btn-sm btn-secondary"
-                                                    title="Navigate"
-                                                    href="@($"NAVResponsePage?schemeCode={investment.SchemeCode}")">
-                                                <i class="bi bi-graph-up"></i>
-                                            </a>
-                                    </td>
-                                </tr>
+                            @if (investment.TotalsTable != null)
+                            {
+                                <div class="mt-auto pt-1 border-top">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <p class="text-muted mb-0 lh-1" style="font-size: 0.75rem;">Invested</p>
+                                            ₹@investment.TotalsTable.InvestedAmount.ToString("N0")
+                                        </div>
+                                        <div class="text-center">
+                                            <p class="text-muted mb-0 lh-1" style="font-size: 0.75rem;">Returns</p>
+                                            @investment.TotalsTable.Returns.ToString("F2")%
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="text-muted mb-0 lh-1" style="font-size: 0.75rem;">Current</p>
+                                            ₹@investment.TotalsTable.TotalValue.ToString("N0")
+                                        </div>
+                                    </div>
+                                </div>
                             }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <br />
 
-        <div class="row g-2">
-            <div class="col-6 col-md-2">
-                <button @onclick="runAllInvestments" class="btn btn-secondary btn-lg"><i class="bi bi-calculator"></i></button>
-            </div>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
+
+
+        <br />
+        <!-- <div>
+            <button @onclick="calculateAllTransactions" class="btn btn-secondary"><i class="bi bi-calculator"></i></button>
+        </div> -->
     }
     <br />
     <br />
@@ -113,23 +115,12 @@
     }
 
 
-    private async Task runInvestments(int _schemeCode)
-    {
-        BacktestService.NAVResponseCTOR(NAVResponseService);
-        await BacktestService.RunInvestments(_schemeCode);
-        
-        ToastService.Notify(new ToastMessage(
-                ToastType.Success,
-                "Calculation triggered",
-                $"{_schemeCode} has been successfully calculated."
-            ));
-    }
 
-    private async Task runAllInvestments()
+    private async Task calculateAllTransactions()
     {
 
-        BacktestService.NAVResponseCTOR(NAVResponseService);
-        await BacktestService.RunAllInvestments();
+        TransactionService.NAVResponseCTOR(NAVResponseService);
+        await TransactionService.CalculateAllTransactions();
         
         ToastService.Notify(new ToastMessage(
                 ToastType.Success,

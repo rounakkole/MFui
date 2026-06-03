@@ -117,8 +117,16 @@
             return;
         }
         NavState.CachedSchemeListItem = await SearchListItemService.GetSearchQuery_new(NavState.SearchQuery);
+        /*
+        NavState.CachedSchemeListItem = NavState.CachedSchemeListItem
+                                          .Where(x => !string.IsNullOrEmpty(x.IsinDivReinvestment)
+                                          || !string.IsNullOrEmpty(x.IsinGrowth))
+                                          .ToList();
+        */
         schemeListItemList = NavState.CachedSchemeListItem;
         await gridRef.RefreshDataAsync();
     }
+
+
 
 }
