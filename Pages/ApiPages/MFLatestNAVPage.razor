@@ -13,27 +13,29 @@
 }
 else
 {
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Date</th>
-                <th>NAV</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (SchemeLatestNAV schemeLatestNAVItem in schemeLatestNAVList)
-            {
+    <div class="table-container">
+        <table class="table">
+            <thead>
                 <tr>
-                    <td>@schemeLatestNAVItem.SchemeCode</td>
-                    <td>@schemeLatestNAVItem.SchemeName</td>
-                    <td class="text-nowrap">@schemeLatestNAVItem.Date</td>
-                    <td>@schemeLatestNAVItem.NAV</td>
+                    <th>Code</th>
+                    <th>Name</th>
+                    <th>Date</th>
+                    <th>NAV</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (SchemeLatestNAV schemeLatestNAVItem in schemeLatestNAVList)
+                {
+                    <tr>
+                        <td>@schemeLatestNAVItem.SchemeCode</td>
+                        <td>@schemeLatestNAVItem.SchemeName</td>
+                        <td class="text-nowrap">@schemeLatestNAVItem.Date</td>
+                        <td>@schemeLatestNAVItem.NAV</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
 
