@@ -7,7 +7,7 @@
 
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false)) 
 
-<PageTitle>Chart</PageTitle>
+<PageTitle>Line chart</PageTitle>
 
 @if (navResponse == null)
 {
@@ -172,7 +172,7 @@ else
 	private async Task NoFillAsync()
 	{
 		var middle = chartData.Datasets![1] as LineChartDataset;
-		middle!.Fill = ""; // null;
+		middle!.Fill = string.Empty; // null;
 		await lineChart.UpdateAsync(chartData, lineChartOptions);
 	}
 

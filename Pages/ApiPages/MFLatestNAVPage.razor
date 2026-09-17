@@ -5,7 +5,7 @@
 @inject IMFLatestNAVService MFLatestNAVService
 
 <PageTitle>Latest NAV</PageTitle>
-<h3>Latest NAV</h3>
+<h6>Latest NAV</h6>
 
 @if (schemeLatestNAVList == null)
 {
@@ -28,7 +28,7 @@ else
                 <tr>
                     <td>@schemeLatestNAVItem.SchemeCode</td>
                     <td>@schemeLatestNAVItem.SchemeName</td>
-                    <td>@schemeLatestNAVItem.Date</td>
+                    <td class="text-nowrap">@schemeLatestNAVItem.Date</td>
                     <td>@schemeLatestNAVItem.NAV</td>
                 </tr>
             }

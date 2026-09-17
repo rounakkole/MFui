@@ -13,8 +13,8 @@
 @inject IndexedDBManager DbManager
 @inject NavigationManager NavigationManager
 
-<PageTitle>Investments</PageTitle>
-<h3>Investments</h3>
+<PageTitle>SIP</PageTitle>
+<h6>SIP</h6>
 
 <div class="row g-2">
     <!-- <input TValue="DateOnly" @bind="startDate" class="form-control" placeholder="Start Date" /> -->
@@ -75,52 +75,51 @@
 
                 <EditForm Model="newInvestmentRecord" OnValidSubmit="addToInvestments">
                 <DataAnnotationsValidator />
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <input type="number" id="amount" class="form-control" @bind="newInvestmentRecord.SIPamount" placeholder="Amount" />
+                            <label for="amount">SIP Amount</label>
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <select id="frequency" class="form-select" @bind="newInvestmentRecord.Frequency">
-                                    @foreach (Frequency freq in Enum.GetValues(typeof(Frequency)))
-                                    {
-                                        <option value="@freq">@freq</option>
-                                    }
-                                </select>
-                                <label for="frequency">Frequency</label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="form-floating">
-                                <input type="number" id="amount" class="form-control" @bind="newInvestmentRecord.SIPamount" placeholder="Amount" />
-                                <label for="amount">SIP Amount</label>
-
-                                <ValidationMessage For="@(() => newInvestmentRecord.SIPamount)" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-2">
-                                <label class="form-label text-muted small mb-1">Start Date</label>
-                                <DateInput TValue="DateOnly" @bind-Value="newInvestmentRecord.StartDate" Placeholder="Select Date" />
-
-                                <ValidationMessage For="@(() => newInvestmentRecord.StartDate)" class="text-danger small mt-1" />
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="mb-2 px-2">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label text-muted small mb-0">Step Up: @newInvestmentRecord.StepUp %</label>
-                                    <!-- <span class="badge bg-primary rounded-pill">@newInvestmentRecord.StepUp %</span> -->
-                                </div>
-                                <input type="range" class="form-range" @bind="newInvestmentRecord.StepUp" @bind:event="oninput" min="0" max="100" />
-                            </div>
+                            <ValidationMessage For="@(() => newInvestmentRecord.SIPamount)" class="text-danger small mt-1" />
                         </div>
                     </div>
 
-                    <div class="text-end">
-                        <button type="submit" class="btn btn-primary px-4 shadow-sm"> Save </button>
+                    <div class="col-md-6">
+                            <div class="form-floating">
+                            <DateInput TValue="DateOnly" @bind-Value="newInvestmentRecord.StartDate" Placeholder="Select Date" />
+                            <label for="startdate">Start Date</label>
+
+                            <ValidationMessage For="@(() => newInvestmentRecord.StartDate)" class="text-danger small mt-1" />
+                        </div>
                     </div>
+                   
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                            <select id="frequency" class="form-select" @bind="newInvestmentRecord.Frequency">
+                                @foreach (Frequency freq in Enum.GetValues(typeof(Frequency)))
+                                {
+                                    <option value="@freq">@freq</option>
+                                }
+                            </select>
+                            <label for="frequency">Frequency</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-2 px-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label text-muted small mb-0">Step Up: @newInvestmentRecord.StepUp %</label>
+                                <!-- <span class="badge bg-primary rounded-pill">@newInvestmentRecord.StepUp %</span> -->
+                            </div>
+                            <input type="range" class="form-range" @bind="newInvestmentRecord.StepUp" @bind:event="oninput" min="0" max="100" />
+                        </div>
+                    </div>
+       
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary px-8"> Buy </button>
+                </div>
 
                 </EditForm>
             </div>
@@ -189,8 +188,6 @@
             </div>
         }
     }
-    <br />
-    <br />
 </div>
 
 
@@ -218,7 +215,8 @@
         {
             newInvestmentRecord.SchemeCode = navResponse.Meta.SchemeCode;
             newInvestmentRecord.SchemeName = navResponse.Meta.SchemeName;
-            newInvestmentRecord.StartDate = startDate;
+            newInvestmentRecord.StartDate = startDate.AddYears(-1);
+            newInvestmentRecord.SIPamount = 500;
         }
 
         List<OrderTable> orderTables = await DbManager.GetRecords<OrderTable>("OrderTable");
@@ -256,7 +254,7 @@
             ToastService.Notify(new ToastMessage(
                     ToastType.Success,
                     "SIP saved",
-                    $"{newInvestmentRecord.SchemeName} has been successfully saved."
+                    $"{newInvestmentRecord.SchemeName} has been saved successfully."
                 ));
 
             await calculateTransactions();
@@ -268,7 +266,7 @@
             ToastService.Notify(new ToastMessage(
                ToastType.Danger,
                "SIP not saved",
-               $"Error occured. Please check Console in Developer Tools."
+               $"Error occured. SIP was not saved"
            ));
         }
     }
@@ -281,8 +279,8 @@
 
         ToastService.Notify(new ToastMessage(
                 ToastType.Success,
-                "Calculation triggered",
-                $"{navResponse.Meta.SchemeCode} has been successfully calculated."
+                "SIP calculated",
+                $"{navResponse.Meta.SchemeCode} has been calculated successfully."
             ));
 
         await OnInitializedAsync();
@@ -294,8 +292,8 @@
 
         ToastService.Notify(new ToastMessage(
                 ToastType.Danger,
-                "Removing SIP",
-                $"{navResponse.Meta.SchemeCode} has been successfully removed."
+                "SIP removed",
+                $"{navResponse.Meta.SchemeCode} has been removed successfully."
             ));
 
         NavigationManager.NavigateTo("/");
