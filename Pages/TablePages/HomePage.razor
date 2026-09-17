@@ -13,7 +13,7 @@
 @inject IndexedDBManager DbManager
 
 <PageTitle>MFui</PageTitle>
-<!-- <h3>MFui</h3> -->
+<!-- <h6>MFui</h6> -->
 
 <div>
     @if (investmentsList == null || !investmentsList.Any())
@@ -21,13 +21,29 @@
         <div class="text-center p-5 text-muted bg-light rounded-3 shadow-sm">
             <i class="bi bi-wallet2 display-4 mb-3 d-block text-secondary"></i>
             <h5 class="text-secondary">No Active SIPs Found</h5>
-            
-            <a href="MobileViewPage" class="btn btn-secondary">Explore</a>
+
+            <div class="btn-desktop">
+                <a href="/DesktopViewPage" class="btn btn-secondary">Explore funds</a>
+            </div>
+            <div class="btn-mobile">
+                <a href="/MobileViewPage" class="btn btn-secondary">Explore funds</a>
+            </div>
         </div>
     }
     else
     {
-       
+        <div class="d-flex gap-1 mb-2">
+            <div class="btn-desktop">
+                <a href="/DesktopViewPage" class="btn btn-secondary">Explore funds</a>
+            </div>
+            <div class="btn-mobile">
+                <a href="/MobileViewPage" class="btn btn-secondary">Explore funds</a>
+            </div>
+            <a href="/MFLatestNAVPage" class="btn btn-secondary">Latest NAV</a>
+
+            <button @onclick="calculateAllTransactions" class="btn btn-secondary"><i class="bi bi-calculator"></i></button>
+        </div>
+
         <div class="row g-4">
             @foreach (var investment in investmentsList)
             {
@@ -84,15 +100,7 @@
                 </div>
             }
         </div>
-
-
-        <br />
-        <!-- <div>
-            <button @onclick="calculateAllTransactions" class="btn btn-secondary"><i class="bi bi-calculator"></i></button>
-        </div> -->
     }
-    <br />
-    <br />
 </div>
 
 
@@ -124,8 +132,8 @@
         
         ToastService.Notify(new ToastMessage(
                 ToastType.Success,
-                "Calculation triggered",
-                $"All SIPs has been successfully calculated."
+                "SIPs calculated",
+                $"All SIPs have been calculated successfully."
             ));
     }
 
