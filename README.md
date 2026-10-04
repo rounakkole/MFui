@@ -4,9 +4,12 @@ https://kind-pebble-08da44700.6.azurestaticapps.net
 ### Credits & Thanks
 ```
 dotnet.microsoft.com/en-us/apps/aspnet/web-apps/blazor
-www.mfapi.in/
+www.mfapi.in
 www.github.com/twbs/bootstrap
+www.github.com/chartjs/Chart.js
 www.github.com/vikramlearning/blazorbootstrap
+www.github.com/wtulloch/Blazor.IndexedDB
+www.github.com/JamesNK/Newtonsoft.Json
 Special thanks to the open source community!
 ```
 
