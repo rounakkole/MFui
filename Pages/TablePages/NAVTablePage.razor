@@ -1,0 +1,85 @@
+﻿@page "/NAVTablePage"
+@using MFui.Data
+@using MFui.Data.Enums
+@using MFui.Services
+@using BlazorBootstrap
+
+@inject INAVResponseService NAVResponseService
+
+<PageTitle>NAV</PageTitle>
+<h6>NAV</h6>
+
+
+<div class="row g-2">
+    <div class="col-6 col-md-3">
+        <DateInput TValue="DateOnly" @bind-Value="@startDate" Placeholder="Start Date" />
+    </div>
+    <div class="col-6 col-md-3">
+        <DateInput TValue="DateOnly" @bind-Value="@endDate" Placeholder="End Date" />
+    </div>
+    <div class="col-6 col-md-3">
+        <input @bind="schemeCode" class="form-control" placeholder="Scheme Code" />
+    </div>
+    <div class="col-6 col-md-3">
+        <button @onclick="getNAVResponse" class="btn btn-primary me-1"><i class="bi bi-search"></i></button>
+    </div>
+</div>
+
+<br />
+
+@if (navResponse == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <p>
+        @navResponse.Meta.SchemeCode
+        @navResponse.Meta.SchemeName
+    </p>
+    <p>@navResponse.Meta.SchemeType</p>
+    <p>@navResponse.Meta.SchemeCategory</p>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>NAV</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (NAVData NAVDataItem in navResponse.Data)
+                {
+                    <tr>
+                        <td class="text-nowrap">@NAVDataItem.Date</td>
+                        <td>@NAVDataItem.NAV</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+    [SupplyParameterFromQuery]
+    private string schemeCode { get; set; }
+
+    private NAVResponse? navResponse;
+
+
+    private DateOnly startDate = DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1);
+    private DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await getNAVResponse();
+    }
+
+    private async Task getNAVResponse()
+    {
+        navResponse = await NAVResponseService.GetNAVResponse(schemeCode, startDate, endDate);
+    }
+
+
+}

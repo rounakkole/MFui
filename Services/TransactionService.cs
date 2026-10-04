@@ -25,7 +25,7 @@ namespace MFui.Services
 
 
 
-        public async Task CalculateTransactions(int _schemeCode)
+        public async Task<TotalsTable> CalculateTransactions(int _schemeCode)
         {
             InvestmentTable? investmentRecord = await _dbManager.GetRecordById<int, InvestmentTable>("InvestmentTable", _schemeCode);
 
@@ -104,7 +104,11 @@ namespace MFui.Services
                     quantity += (currentSipAmount / navPrice);
                 }
 
-
+                if (lastNavPrice == 0)
+                {
+                    await _dbManager.DeleteRecord<int>("InvestmentTable", _schemeCode);
+                    return null;
+                }
 
                 TotalsTable recordTotals = new TotalsTable
                 {
@@ -128,17 +132,52 @@ namespace MFui.Services
             {
                 Console.Error.WriteLine($"Error: {ex.Message}");
             }
+            return investmentRecord.TotalsTable;
         }
+
+
+
 
         public async Task CalculateAllTransactions()
         {
+            TotalsTable portfolioTotalsTable = new TotalsTable();
+            portfolioTotalsTable.Id = 2; // investmentRecord.SchemeCode 
+            portfolioTotalsTable.InvestedAmount = 0;
+            portfolioTotalsTable.TotalValue = 0;
+
             List<InvestmentTable> investmentsList = new();
             investmentsList = await _dbManager.GetRecords<InvestmentTable>("InvestmentTable");
             //if (investmentsList is not null && investmentsList.Count > 0)
             foreach (InvestmentTable investment in investmentsList)
             {
                 //investment = investmentsList.Where(x => x.SchemeCode == _schemeCode);
-                await CalculateTransactions(investment.SchemeCode);
+                TotalsTable recordTotals = await CalculateTransactions(investment.SchemeCode);
+                if (recordTotals != null)
+                {
+                    portfolioTotalsTable.InvestedAmount += recordTotals.InvestedAmount;
+                    portfolioTotalsTable.TotalValue += recordTotals.TotalValue;
+                }
+            }
+
+            if (portfolioTotalsTable.InvestedAmount > 0)
+            {
+                portfolioTotalsTable.Returns = ((float)(portfolioTotalsTable.TotalValue - portfolioTotalsTable.InvestedAmount) / portfolioTotalsTable.InvestedAmount) * 100f;
+            }
+
+            if (portfolioTotalsTable != null)
+            {
+                InvestmentTable investmentRecord = new InvestmentTable();
+                investmentRecord.SchemeCode = 0;
+                investmentRecord.SchemeName = "Totals";
+                investmentRecord.TotalsTable = portfolioTotalsTable;
+
+                StoreRecord<InvestmentTable> recordToSave = new StoreRecord<InvestmentTable>
+                {
+                    Storename = "InvestmentTable",
+                    Data = investmentRecord
+                };
+
+                await _dbManager.AddRecord(recordToSave);
             }
         }
 
